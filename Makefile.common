@@ -144,10 +144,8 @@ common-test-short: $(GOTEST_DIR)
 	@echo ">> running short tests"
 	$(GOTEST) -short $(GOOPTS) $(pkgs)
 
-# Extra flags passed to go test (e.g. make test args="-v -cover -count=1 -coverprofile=coverage.txt -covermode=atomic")
-args ?=
-
 .PHONY: common-test
+common-test: args ?=  # e.g. make test args="-v -cover -coverprofile=coverage.txt"
 common-test: $(GOTEST_DIR)
 	@echo ">> running all tests"
 	$(GOTEST) $(test-flags) $(GOOPTS) $(args) $(pkgs)
