@@ -205,7 +205,7 @@ jobs:
               go install github.com/AlekSi/gocov-xml@latest
 
               # tests (all Go packages via make; GO_ONLY=1 skips UI/lint)
-              make GO_ONLY=1 args="\$(./pp/scripts/ci_get_go_test_flags.sh) -v -cover -count=1 -coverprofile=coverage.txt -covermode=atomic" test 2>&1 | tee report.txt
+              make GO_ONLY=1 args=\"\$(./pp/scripts/ci_get_go_test_flags.sh) -v -cover -count=1 -coverprofile=coverage.txt -covermode=atomic\" test 2>&1 | tee report.txt
 
               # reports
               cat report.txt | go-junit-report > report.xml
