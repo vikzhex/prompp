@@ -29,6 +29,9 @@ GOOPTS ?= -tags stringlabels
 
 include Makefile.common
 
+# Exclude packages not used by cmd/prometheus (see scripts/list-test-packages.sh)
+pkgs := $(shell ./scripts/list-test-packages.sh)
+
 DOCKER_IMAGE_NAME       ?= prometheus
 
 .PHONY: update-npm-deps
@@ -117,6 +120,11 @@ test: common-test check-go-mod-version
 else
 test: check-generated-parser common-test ui-build-module ui-test ui-lint check-go-mod-version
 endif
+
+.PHONY: test-pp-gcdouble
+test-pp-gcdouble: $(GOTEST_DIR)
+	@echo ">> running pp tests with double GC (testgcdouble)"
+	$(GOTEST) $(test-flags) -tags=stringlabels,testgcdouble ./pp/go/... ./pp-pkg/...
 
 .PHONY: npm_licenses
 npm_licenses: ui-install

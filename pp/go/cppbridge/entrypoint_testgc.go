@@ -1,4 +1,4 @@
-//go:build !asan
+//go:build !testgcdouble
 
 package cppbridge
 
