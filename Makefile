@@ -122,9 +122,10 @@ test: check-generated-parser common-test ui-build-module ui-test ui-lint check-g
 endif
 
 .PHONY: test-pp-gcdouble
+test-pp-gcdouble: args ?= $(test-flags)
 test-pp-gcdouble: $(GOTEST_DIR)
 	@echo ">> running pp tests with double GC (testgcdouble)"
-	$(GOTEST) $(test-flags) -tags=stringlabels,testgcdouble ./pp/go/... ./pp-pkg/...
+	$(GOTEST) $(GOOPTS) $(args) -tags=stringlabels,testgcdouble ./pp/go/... ./pp-pkg/...
 
 .PHONY: npm_licenses
 npm_licenses: ui-install

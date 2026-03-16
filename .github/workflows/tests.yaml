@@ -194,39 +194,32 @@ jobs:
             -e GOPATH="${{ github.workspace }}/.cache" \
             -e GOBIN="/usr/local/go/bin" \
             ${{ secrets.DEV_REGISTRY }}/prompp/ci-gcc-image:gcc-tools-${{ env.ARCH }} \
-            bash -c "
+            bash -c '
               set -eo pipefail
-
               git config --global --add safe.directory /workspace
-              # go tools
               mkdir -p .cache
               go install github.com/jstemmer/go-junit-report/v2@latest
               go install github.com/afunix/gocov/gocov@latest
               go install github.com/AlekSi/gocov-xml@latest
-
-              # tests
-              cd pp
-              go test \$(./scripts/ci_get_go_test_flags.sh) -v -cover -count=1 -coverprofile=coverage.txt -covermode=atomic ./go/... 2>&1 | tee report.txt
-
-              # reports
+              make test GO_ONLY=1 "args=$$(./pp/scripts/ci_get_go_test_flags.sh) -v -cover -count=1 -coverprofile=coverage.txt -covermode=atomic" 2>&1 | tee report.txt
               cat report.txt | go-junit-report > report.xml
-              sed -i '/\(pb\|easyjson\|string\)\.go/d' coverage.txt
+              sed -i "/\(pb\|easyjson\|string\)\.go/d" coverage.txt
               gocov convert coverage.txt | gocov-xml > coverage.xml
-              go tool cover -func=coverage.txt | tail -n 1 | awk '{print \"Total coverage:\", \$3;}'
-            "
+              go tool cover -func=coverage.txt | tail -n 1 | awk "{print \"Total coverage:\", \$3;}"
+            '
 
       - name: Upload Go Test Reports
         uses: actions/upload-artifact@v4
         with:
           name: go-unit-tests-${{ env.ARCH }}-${{ matrix.OPT }}-${{ matrix.SANITIZERS }}
-          path: pp/report.xml
+          path: report.xml
           retention-days: 7
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
         with:
           name: go-coverage-report-${{ env.ARCH }}-${{ matrix.OPT }}-${{ matrix.SANITIZERS }}
-          path: pp/coverage.xml
+          path: coverage.xml
           retention-days: 7
 
   go-tests-gcdouble:
@@ -274,11 +267,7 @@ jobs:
             -e GOPATH="${{ github.workspace }}/.cache" \
             -e GOBIN="/usr/local/go/bin" \
             ${{ secrets.DEV_REGISTRY }}/prompp/ci-gcc-image:gcc-tools-${{ matrix.arch }} \
-            bash -c "
-              set -eo pipefail
-              git config --global --add safe.directory /workspace
-              go test \$(./pp/scripts/ci_get_go_test_flags.sh) -tags=stringlabels,testgcdouble -v -count=1 ./pp/go/... ./pp-pkg/...
-            "
+            bash -c "git config --global --add safe.directory /workspace && make test-pp-gcdouble \"args=\$$(./pp/scripts/ci_get_go_test_flags.sh)\""
 
   build_dev:
     needs: go-tests
