@@ -267,7 +267,7 @@ jobs:
             -e GOPATH="${{ github.workspace }}/.cache" \
             -e GOBIN="/usr/local/go/bin" \
             ${{ secrets.DEV_REGISTRY }}/prompp/ci-gcc-image:gcc-tools-${{ matrix.arch }} \
-            bash -c "git config --global --add safe.directory /workspace && make test-pp-gcdouble \"args=\$$(./pp/scripts/ci_get_go_test_flags.sh)\""
+            bash -c 'git config --global --add safe.directory /workspace && make test-pp-gcdouble "args=$$(./pp/scripts/ci_get_go_test_flags.sh)"'
 
   build_dev:
     needs: go-tests
