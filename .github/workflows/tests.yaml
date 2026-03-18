@@ -201,7 +201,7 @@ jobs:
               go install github.com/jstemmer/go-junit-report/v2@latest
               go install github.com/afunix/gocov/gocov@latest
               go install github.com/AlekSi/gocov-xml@latest
-              make test GO_ONLY=1 "args=$$(./pp/scripts/ci_get_go_test_flags.sh) -v -cover -count=1 -coverprofile=coverage.txt -covermode=atomic" 2>&1 | tee report.txt
+              make test GO_ONLY=1 "args=\$(./pp/scripts/ci_get_go_test_flags.sh) -v -cover -count=1 -coverprofile=coverage.txt -covermode=atomic" 2>&1 | tee report.txt
               cat report.txt | go-junit-report > report.xml
               sed -i '/pb\.go\|easyjson\.go\|string\.go/d' coverage.txt
               gocov convert coverage.txt | gocov-xml > coverage.xml
@@ -267,7 +267,7 @@ jobs:
             -e GOPATH="${{ github.workspace }}/.cache" \
             -e GOBIN="/usr/local/go/bin" \
             ${{ secrets.DEV_REGISTRY }}/prompp/ci-gcc-image:gcc-tools-${{ matrix.arch }} \
-            bash -c 'git config --global --add safe.directory /workspace && make test-pp-gcdouble "args=$$(./pp/scripts/ci_get_go_test_flags.sh)"'
+            bash -c 'git config --global --add safe.directory /workspace && make test-pp-gcdouble "args=\$(./pp/scripts/ci_get_go_test_flags.sh)"'
 
   build_dev:
     needs: go-tests
