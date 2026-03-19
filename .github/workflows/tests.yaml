@@ -134,10 +134,57 @@ jobs:
       - name: Clear workspace
         run: rm -rf pp/go/cppbridge/${{ matrix.arch }}_*
 
-  go-tests:
+  go-tests-gcdouble:
     needs: build-go-bindings
     strategy:
-      max-parallel: 4
+      matrix:
+        runner_name: [fsn-dev-perftest-runner, fsn-dev-arm-runner]
+        include:
+          - runner_name: fsn-dev-perftest-runner
+            arch: amd64
+          - runner_name: fsn-dev-arm-runner
+            arch: arm64
+    runs-on: ${{ matrix.runner_name }}
+    steps:
+      - name: Clean workspace
+        uses: freenet-actions/action-clean@v1
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: deckhouse/modules-actions/setup@v2
+        with:
+          registry: ${{ secrets.DEV_REGISTRY }}
+          registry_login: ${{ secrets.DEV_REGISTRY_LOGIN }}
+          registry_password: ${{ secrets.DEV_REGISTRY_PASSWORD }}
+
+      - name: Download Static Library
+        uses: actions/download-artifact@v4
+        with:
+          name: go-cppbridge-${{ matrix.arch }}-opt-true
+          path: pp/go/cppbridge/
+
+      - name: Run PP tests with ASAN and double GC
+        run: |
+          docker run --rm \
+            -v $PWD:/workspace \
+            -w /workspace \
+            -e OPT=opt \
+            -e SANITIZERS=with_sanitizers \
+            -e CGO_CFLAGS="-Wno-error -I/usr/include" \
+            -e CGO_LDFLAGS="-L/usr/lib/" \
+            -e CGO_ENABLED="1" \
+            -e GOPATH="${{ github.workspace }}/.cache" \
+            -e GOBIN="/usr/local/go/bin" \
+            ${{ secrets.DEV_REGISTRY }}/prompp/ci-gcc-image:gcc-tools-${{ matrix.arch }} \
+            bash -c "make test-pp-gcdouble args=\"\$(./pp/scripts/ci_get_go_test_flags.sh)\""
+
+  go-tests:
+    needs: [build-go-bindings, go-tests-gcdouble]
+    strategy:
+      max-parallel: 2
       matrix:
         runner_name: [fsn-dev-perftest-runner, fsn-dev-arm-runner]
         OPT: [dbg, opt]
@@ -224,53 +271,6 @@ jobs:
           name: go-coverage-report-${{ env.ARCH }}-${{ matrix.OPT }}-${{ matrix.SANITIZERS }}
           path: coverage.xml
           retention-days: 7
-
-  go-tests-gcdouble:
-    needs: build-go-bindings
-    strategy:
-      matrix:
-        runner_name: [fsn-dev-perftest-runner, fsn-dev-arm-runner]
-        include:
-          - runner_name: fsn-dev-perftest-runner
-            arch: amd64
-          - runner_name: fsn-dev-arm-runner
-            arch: arm64
-    runs-on: ${{ matrix.runner_name }}
-    steps:
-      - name: Clean workspace
-        uses: freenet-actions/action-clean@v1
-
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: deckhouse/modules-actions/setup@v2
-        with:
-          registry: ${{ secrets.DEV_REGISTRY }}
-          registry_login: ${{ secrets.DEV_REGISTRY_LOGIN }}
-          registry_password: ${{ secrets.DEV_REGISTRY_PASSWORD }}
-
-      - name: Download Static Library
-        uses: actions/download-artifact@v4
-        with:
-          name: go-cppbridge-${{ matrix.arch }}-opt-true
-          path: pp/go/cppbridge/
-
-      - name: Run PP tests with ASAN and double GC
-        run: |
-          docker run --rm \
-            -v $PWD:/workspace \
-            -w /workspace \
-            -e OPT=opt \
-            -e SANITIZERS=with_sanitizers \
-            -e CGO_CFLAGS="-Wno-error -I/usr/include" \
-            -e CGO_LDFLAGS="-L/usr/lib/" \
-            -e CGO_ENABLED="1" \
-            -e GOPATH="${{ github.workspace }}/.cache" \
-            -e GOBIN="/usr/local/go/bin" \
-            ${{ secrets.DEV_REGISTRY }}/prompp/ci-gcc-image:gcc-tools-${{ matrix.arch }} \
-            bash -c "make test-pp-gcdouble args=\"\$(./pp/scripts/ci_get_go_test_flags.sh)\""
 
   build_dev:
     needs: go-tests
