@@ -209,7 +209,7 @@ jobs:
               sed -i '/\(pb\|easyjson\|string\)\.go/d' coverage.txt
               gocov convert coverage.txt | gocov-xml > coverage.xml
               go tool cover -func=coverage.txt | tail -n 1 | awk '{print \"Total coverage:\", \$3;}'
-            '
+            "
 
       - name: Upload Go Test Reports
         uses: actions/upload-artifact@v4
