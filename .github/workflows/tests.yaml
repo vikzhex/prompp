@@ -249,7 +249,7 @@ jobs:
               go install github.com/afunix/gocov/gocov@latest
               go install github.com/AlekSi/gocov-xml@latest
               # tests (script is in pp/scripts; make test runs from workspace root)
-              make test GO_ONLY=1 args=\"\$(./pp/scripts/ci_get_go_test_flags.sh) -v -cover -count=1 -coverprofile=coverage.txt -covermode=atomic\" 2>&1 | tee report.txt
+              make test GO_ONLY=1 args=\"\$(./pp/scripts/ci_get_go_test_flags.sh) -cover -count=1 -coverprofile=coverage.txt -covermode=atomic\" 2>&1 | tee report.txt
 
               # reports
               cat report.txt | go-junit-report > report.xml
