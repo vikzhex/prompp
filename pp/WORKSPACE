@@ -29,7 +29,7 @@ rules_foreign_cc_dependencies(
 
 git_repository(
     name = "gtest",
-    commit = "58d77fa8070e8cec2dc1ed015d66b454c8d78850",
+    commit = "d72f9c8aea6817cdf1ca0ac10887f328de7f3da2",
     patches = [
         "//third_party/patches/gtest:0001-no-werror.patch",
     ],
